@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@800&family=JetBrains+Mono:wght@400;600&family=Crimson+Pro:ital,wght@1,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Custom Brand Colors */
+    --charcoal: #1A1A1D;
+    --cream: #F5F1E8;
+    --prussian-blue: #003049;
+    --neon-green: #06FFA5;
+    
+    /* Tailwind HSL Variables */
+    --background: 36 18% 95%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 198 100% 14%;
+    --primary-foreground: 36 18% 95%;
+
+    --secondary: 36 18% 95%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 36 18% 90%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 162 100% 51%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 198 100% 14%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 36 18% 95%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 36 18% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 36 18% 95%;
+
+    --primary: 198 100% 14%;
+    --primary-foreground: 36 18% 95%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 36 18% 95%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 162 100% 51%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 162 100% 51%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+  }
+}
+
+@layer utilities {
+  .text-display {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+  }
+  
+  .text-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+  }
+  
+  .text-accent {
+    font-family: 'Crimson Pro', serif;
+    font-weight: 600;
+    font-style: italic;
+  }
+  
+  .noise-texture {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+  
+  .grid-pattern {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
