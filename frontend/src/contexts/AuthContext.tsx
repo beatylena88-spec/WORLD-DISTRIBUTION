@@ -10,6 +10,7 @@ interface User {
   city?: string;
   postal_code?: string;
   phone?: string;
+  companyName?: string;
 }
 
 interface RegisterData {
