@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { Toaster } from "./components/ui/sonner";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import CartPage from "./pages/CartPage";
@@ -16,15 +17,24 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
-  
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1A1A1D] flex items-center justify-center text-[#F5F1E8] text-mono">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage />} />
-      <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/products" /> : <LoginPage />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/products" /> : <RegisterPage />} />
+      <Route path="/" element={<Navigate to="/products" />} />
+      <Route path="/products" element={<ProductsPage />} />
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-      <Route path="/products" element={<PrivateRoute><ProductsPage /></PrivateRoute>} />
-      <Route path="/cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
+      <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
       <Route path="/quote" element={<PrivateRoute><QuotePage /></PrivateRoute>} />
     </Routes>

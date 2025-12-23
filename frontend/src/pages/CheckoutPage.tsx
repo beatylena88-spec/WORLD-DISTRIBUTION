@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, CheckCircle2, AlertTriangle, Globe, Building2, CreditCard, Landmark } from 'lucide-react';
+import { ArrowLeft, CreditCard, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Elements } from '@stripe/react-stripe-js';
@@ -11,56 +11,28 @@ import { stripePromise } from '@/lib/stripeConfig';
 import { createPaymentIntent } from '@/services/paymentService';
 import StripeCheckoutForm from '@/components/StripeCheckoutForm';
 
-const paymentAccounts = {
-  EU: {
-    name: 'Olky B.V.',
-    iban: 'NL89ABNA0417164300',
-    swift: 'ABNANL2A',
-    type: 'SEPA',
-    region: 'European Union',
-    compatible: ['Germany', 'France', 'Netherlands', 'Belgium', 'Spain', 'Italy', 'Austria']
-  },
-  INTERNATIONAL: {
-    name: 'B Partner GmbH',
-    iban: 'DE89370400440532013000',
-    swift: 'COBADEFFXXX',
-    type: 'SWIFT',
-    region: 'International',
-    compatible: ['United States', 'United Kingdom', 'Switzerland', 'Canada', 'Australia']
-  }
-};
-
-type PaymentMethod = 'card' | 'bank';
-
 export default function CheckoutPage() {
   const { items, totalAmount, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingPaymentIntent, setLoadingPaymentIntent] = useState(false);
-
-  // Auto-select payment account based on user location
-  const selectedAccount = user?.location.region === 'EU'
-    ? paymentAccounts.EU
-    : paymentAccounts.INTERNATIONAL;
-
-  const isCompatible = selectedAccount.compatible.includes(user?.location.country || '');
+  const [error, setError] = useState<string | null>(null);
 
   // Calculate total in cents for Stripe
   const totalWithVAT = Math.round(totalAmount * 1.19 * 100); // Convert to cents
 
-  // Create PaymentIntent when card payment is selected
+  // Create PaymentIntent when component loads
   useEffect(() => {
-    if (paymentMethod === 'card' && items.length > 0 && !clientSecret) {
+    if (items.length > 0 && !clientSecret) {
       setLoadingPaymentIntent(true);
+      setError(null);
       createPaymentIntent({
         amount: totalWithVAT,
         currency: 'eur',
         metadata: {
-          userId: user?.id || '',
-          companyName: user?.companyName || '',
+          userId: user?.id.toString() || '',
+          companyName: user?.company_name || '',
         },
       })
         .then((data) => {
@@ -68,32 +40,25 @@ export default function CheckoutPage() {
         })
         .catch((error) => {
           console.error('Error creating payment intent:', error);
-          toast.error('Failed to initialize payment. Please try again.');
+          const errorMessage = error.message || 'Failed to initialize payment';
+          setError(errorMessage);
+
+          // Check if it's a configuration error
+          if (errorMessage.includes('unavailable') || errorMessage.includes('503')) {
+            toast.error('Stripe not configured', {
+              description: 'Please add your Stripe API keys to the .env files'
+            });
+          } else {
+            toast.error('Payment initialization failed', {
+              description: errorMessage
+            });
+          }
         })
         .finally(() => {
           setLoadingPaymentIntent(false);
         });
     }
-  }, [paymentMethod, items.length, totalWithVAT, clientSecret, user]);
-
-  const handleBankTransferOrder = async () => {
-    if (!isCompatible) {
-      toast.error('Payment method not compatible with your location');
-      return;
-    }
-
-    setProcessing(true);
-
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    toast.success('Order placed successfully!', {
-      description: 'Invoice will be sent to your email'
-    });
-
-    clearCart();
-    navigate('/dashboard');
-  };
+  }, [items.length, totalWithVAT, clientSecret, user]);
 
   const handleStripeSuccess = () => {
     toast.success('Payment successful!', {
@@ -134,10 +99,10 @@ export default function CheckoutPage() {
           transition={{ duration: 0.4 }}
         >
           <h1 className="text-display text-6xl text-[#F5F1E8] mb-4">
-            Checkout
+            Secure Checkout
           </h1>
           <p className="text-mono text-xl text-[#F5F1E8]/70 mb-16">
-            Review your order and complete payment
+            Complete your payment securely with Stripe
           </p>
         </motion.div>
 
@@ -191,12 +156,12 @@ export default function CheckoutPage() {
 
             <div className="bg-[#F5F1E8] rounded-xl p-8">
               <h3 className="text-display text-xl text-[#1A1A1D] mb-4">
-                Client Information
+                Billing Information
               </h3>
               <div className="space-y-3 text-mono">
                 <div>
                   <p className="text-xs text-[#1A1A1D]/60">Company</p>
-                  <p className="text-sm font-semibold text-[#1A1A1D]">{user?.companyName}</p>
+                  <p className="text-sm font-semibold text-[#1A1A1D]">{user?.company_name}</p>
                 </div>
                 <div>
                   <p className="text-xs text-[#1A1A1D]/60">Email</p>
@@ -204,8 +169,17 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <p className="text-xs text-[#1A1A1D]/60">Location</p>
-                  <p className="text-sm text-[#1A1A1D]">{user?.location.country}</p>
+                  <p className="text-sm text-[#1A1A1D]">{user?.country}</p>
                 </div>
+                {user?.street_address && (
+                  <div>
+                    <p className="text-xs text-[#1A1A1D]/60">Delivery Address</p>
+                    <p className="text-sm text-[#1A1A1D]">
+                      {user.street_address}<br />
+                      {user.city}, {user.postal_code}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -214,180 +188,85 @@ export default function CheckoutPage() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.4, type: 'spring', stiffness: 100 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
           >
             <div className="bg-[#003049] rounded-xl p-8 border-4 border-[#06FFA5] shadow-2xl sticky top-24">
-              {/* Payment Method Selector */}
               <div className="flex items-center gap-3 mb-6">
-                <Globe className="w-8 h-8 text-[#06FFA5]" />
+                <CreditCard className="w-8 h-8 text-[#06FFA5]" />
                 <div>
                   <h2 className="text-display text-2xl text-[#F5F1E8]">
-                    Payment Method
+                    Payment Details
                   </h2>
                   <p className="text-mono text-sm text-[#F5F1E8]/60">
-                    Choose your preferred payment option
+                    Secure payment powered by Stripe
                   </p>
                 </div>
-              </div>
-
-              {/* Payment Method Tabs */}
-              <div className="flex gap-4 mb-6">
-                <button
-                  onClick={() => setPaymentMethod('card')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-lg font-semibold transition-all ${paymentMethod === 'card'
-                      ? 'bg-[#06FFA5] text-[#1A1A1D]'
-                      : 'bg-[#F5F1E8]/10 text-[#F5F1E8] hover:bg-[#F5F1E8]/20'
-                    }`}
-                >
-                  <CreditCard className="w-5 h-5" />
-                  Credit Card
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('bank')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-lg font-semibold transition-all ${paymentMethod === 'bank'
-                      ? 'bg-[#06FFA5] text-[#1A1A1D]'
-                      : 'bg-[#F5F1E8]/10 text-[#F5F1E8] hover:bg-[#F5F1E8]/20'
-                    }`}
-                >
-                  <Landmark className="w-5 h-5" />
-                  Bank Transfer
-                </button>
               </div>
 
               {/* Stripe Card Payment */}
-              {paymentMethod === 'card' && (
-                <div>
-                  {loadingPaymentIntent ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#06FFA5]"></div>
-                      <span className="ml-3 text-[#F5F1E8]">Initializing payment...</span>
-                    </div>
-                  ) : clientSecret ? (
-                    <Elements
-                      stripe={stripePromise}
-                      options={{
-                        clientSecret,
-                        appearance: {
-                          theme: 'stripe',
-                          variables: {
-                            colorPrimary: '#06FFA5',
-                            colorBackground: '#ffffff',
-                            colorText: '#1A1A1D',
-                            colorDanger: '#ef4444',
-                            fontFamily: 'system-ui, sans-serif',
-                            borderRadius: '8px',
-                          },
-                        },
-                      }}
-                    >
-                      <StripeCheckoutForm
-                        onSuccess={handleStripeSuccess}
-                        onError={handleStripeError}
-                      />
-                    </Elements>
-                  ) : (
-                    <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-mono text-sm font-semibold text-yellow-400 mb-1">
-                            Configuration Required
-                          </p>
-                          <p className="text-mono text-xs text-[#F5F1E8]/80">
-                            Please configure your Stripe API keys in .env.local
-                          </p>
+              <div>
+                {loadingPaymentIntent ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#06FFA5] mb-4"></div>
+                    <span className="text-[#F5F1E8] text-mono">Initializing secure payment...</span>
+                  </div>
+                ) : error ? (
+                  <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-mono text-sm font-semibold text-red-400 mb-2">
+                          Payment Configuration Required
+                        </p>
+                        <p className="text-mono text-xs text-[#F5F1E8]/90 mb-4">
+                          {error.includes('unavailable') || error.includes('503')
+                            ? 'Stripe API keys need to be configured. Please check the STRIPE_SETUP.md file.'
+                            : error
+                          }
+                        </p>
+                        <div className="bg-[#1A1A1D]/50 rounded p-3 text-xs text-[#F5F1E8]/80 text-mono">
+                          <p className="mb-2">To fix this:</p>
+                          <ol className="list-decimal list-inside space-y-1">
+                            <li>Get keys from dashboard.stripe.com/test/apikeys</li>
+                            <li>Update backend/.env with your secret key</li>
+                            <li>Update frontend/.env with your publishable key</li>
+                            <li>Restart both servers</li>
+                          </ol>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Bank Transfer */}
-              {paymentMethod === 'bank' && (
-                <>
-                  <div className="bg-[#F5F1E8]/10 backdrop-blur-xl rounded-lg p-6 mb-6 border border-[#06FFA5]/30">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="w-5 h-5 text-[#06FFA5]" />
-                        <span className="text-mono font-semibold text-[#F5F1E8]">
-                          {selectedAccount.name}
-                        </span>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${selectedAccount.type === 'SEPA'
-                          ? 'bg-[#06FFA5] text-[#1A1A1D]'
-                          : 'bg-blue-500 text-white'
-                        }`}>
-                        {selectedAccount.type}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-mono text-xs text-[#F5F1E8]/60 mb-1">IBAN</p>
-                        <p className="text-mono text-lg font-bold text-[#06FFA5] tracking-wider">
-                          {selectedAccount.iban}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-mono text-xs text-[#F5F1E8]/60 mb-1">SWIFT/BIC</p>
-                        <p className="text-mono text-sm text-[#F5F1E8]">
-                          {selectedAccount.swift}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-mono text-xs text-[#F5F1E8]/60 mb-1">Region</p>
-                        <p className="text-mono text-sm text-[#F5F1E8]">
-                          {selectedAccount.region}
-                        </p>
                       </div>
                     </div>
                   </div>
-
-                  {/* Compatibility Check */}
-                  {isCompatible ? (
-                    <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-mono text-sm font-semibold text-green-400 mb-1">
-                            Payment Method Compatible
-                          </p>
-                          <p className="text-mono text-xs text-[#F5F1E8]/80">
-                            This IBAN is compatible with your bank location ({user?.location.country})
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-mono text-sm font-semibold text-red-400 mb-1">
-                            Incompatible Payment Method
-                          </p>
-                          <p className="text-mono text-xs text-[#F5F1E8]/80">
-                            This IBAN may not be compatible with your bank location. Please contact support.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleBankTransferOrder}
-                    disabled={processing || !isCompatible}
-                    className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] font-bold py-6 text-base transition-all hover:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                ) : clientSecret ? (
+                  <Elements
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret,
+                      appearance: {
+                        theme: 'stripe',
+                        variables: {
+                          colorPrimary: '#06FFA5',
+                          colorBackground: '#ffffff',
+                          colorText: '#1A1A1D',
+                          colorDanger: '#ef4444',
+                          fontFamily: 'JetBrains Mono, monospace',
+                          borderRadius: '8px',
+                        },
+                      },
+                    }}
                   >
-                    {processing ? 'Processing Order...' : 'Place Order'}
-                  </Button>
+                    <StripeCheckoutForm
+                      onSuccess={handleStripeSuccess}
+                      onError={handleStripeError}
+                    />
+                  </Elements>
+                ) : null}
+              </div>
 
-                  <p className="text-mono text-xs text-[#F5F1E8]/50 mt-4 text-center">
-                    Invoice with payment details will be generated after order confirmation
-                  </p>
-                </>
-              )}
+              <div className="mt-6 pt-6 border-t border-[#F5F1E8]/10">
+                <p className="text-mono text-xs text-[#F5F1E8]/50 text-center">
+                  🔒 Your payment information is secure and encrypted
+                </p>
+              </div>
             </div>
           </motion.div>
         </div>

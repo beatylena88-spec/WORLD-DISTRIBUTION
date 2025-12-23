@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,28 +79,34 @@ export default function LoginPage() {
                   className="text-mono bg-white border-[#003049]/20 focus:border-[#06FFA5]"
                 />
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-[#003049] hover:bg-[#003049]/90 text-[#F5F1E8] text-mono font-semibold py-6 text-base transition-all hover:scale-[0.98]"
+
+              <Button
+                type="submit"
+                className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] text-mono font-semibold py-6 text-base transition-all hover:scale-[0.98]"
                 disabled={loading}
               >
                 {loading ? 'Authenticating...' : 'Access Platform'}
               </Button>
 
               <div className="pt-4 border-t border-[#003049]/10">
-                <div className="flex items-center gap-2 text-xs text-[#1A1A1D]/60 text-mono">
-                  <Globe className="w-4 h-4" />
-                  <span>Geographic payment routing enabled</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-[#1A1A1D]/60 text-mono">
+                    <Globe className="w-4 h-4" />
+                    <span>Geographic payment routing enabled</span>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <Link
+                    to="/register"
+                    className="text-sm text-[#003049] hover:text-[#06FFA5] text-mono transition-colors font-medium"
+                  >
+                    Don't have an account? <span className="underline">Sign up</span>
+                  </Link>
                 </div>
               </div>
             </form>
           </CardContent>
         </Card>
-
-        <p className="text-center mt-6 text-xs text-[#F5F1E8]/50 text-mono">
-          Demo credentials: any email / any password
-        </p>
       </div>
     </div>
   );

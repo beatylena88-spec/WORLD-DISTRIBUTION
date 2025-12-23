@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Trash2, ShoppingCart, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalAmount, clearCart } = useCart();
+  const { isAuthenticated } = useAuth();
 
   if (items.length === 0) {
     return (
@@ -20,7 +22,7 @@ export default function CartPage() {
             </Link>
           </div>
         </header>
-        
+
         <main className="max-w-7xl mx-auto px-6 py-20">
           <div className="text-center">
             <ShoppingCart className="w-24 h-24 text-[#F5F1E8]/20 mx-auto mb-6" />
@@ -62,8 +64,8 @@ export default function CartPage() {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={clearCart}
               className="border-[#F5F1E8]/20 text-[#F5F1E8] hover:bg-[#F5F1E8]/10"
             >
@@ -85,12 +87,12 @@ export default function CartPage() {
                 transition={{ delay: index * 0.08, duration: 0.4 }}
                 className="bg-[#F5F1E8] rounded-xl p-6 flex gap-6"
               >
-                <img 
-                  src={item.product.image} 
+                <img
+                  src={item.product.image}
                   alt={item.product.name}
                   className="w-32 h-32 object-cover rounded-lg"
                 />
-                
+
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -185,11 +187,27 @@ export default function CartPage() {
                 </span>
               </div>
 
-              <Link to="/checkout">
-                <Button className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] font-bold py-6 text-base transition-all hover:scale-[0.98]">
-                  Proceed to Checkout
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <Link to="/checkout">
+                  <Button className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] font-bold py-6 text-base transition-all hover:scale-[0.98]">
+                    Proceed to Checkout
+                  </Button>
+                </Link>
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-[#F5F1E8]/10 rounded-lg p-4 mb-3">
+                    <p className="text-mono text-sm text-[#F5F1E8] text-center">
+                      Please login to complete your purchase
+                    </p>
+                  </div>
+                  <Link to="/login">
+                    <Button className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] font-bold py-6 text-base transition-all hover:scale-[0.98]">
+                      <LogIn className="w-5 h-5 mr-2" />
+                      Login to Checkout
+                    </Button>
+                  </Link>
+                </div>
+              )}
 
               <p className="text-mono text-xs text-[#F5F1E8]/60 mt-4 text-center">
                 Secure payment routing enabled

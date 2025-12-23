@@ -5,7 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { volumeTiers, calculatePrice } from '@/data/products';
-import { Package } from 'lucide-react';
+import { Package, ImageOff } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +15,7 @@ interface ProductCardProps {
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const [quantity, setQuantity] = useState(100);
   const [selectedTier, setSelectedTier] = useState<keyof typeof volumeTiers>('100kg');
+  const [imageError, setImageError] = useState(false);
 
   // Determine tier based on quantity
   const getTierFromQuantity = (qty: number): keyof typeof volumeTiers => {
@@ -33,44 +34,59 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   const totalPrice = currentPrice * quantity;
 
   return (
-    <div className="bg-[#F5F1E8] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
-      <div className="aspect-[4/3] overflow-hidden">
-        <img 
-          src={product.image} 
-          alt={product.name}
-          className="w-full h-full object-cover"
-        />
+    <div className="bg-[#F5F1E8] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col h-full">
+      {/* Image Section - Fixed Height */}
+      <div className="aspect-[4/3] overflow-hidden bg-[#1A1A1D]/5 flex items-center justify-center">
+        {imageError || !product.image ? (
+          <div className="flex flex-col items-center justify-center text-[#1A1A1D]/30">
+            <ImageOff className="w-16 h-16 mb-2" />
+            <span className="text-mono text-sm">No image available</span>
+          </div>
+        ) : (
+          <img
+            src={product.image}
+            alt={product.name}
+            onError={() => setImageError(true)}
+            className="w-full h-full object-cover"
+          />
+        )}
       </div>
-      
-      <div className="p-6">
+
+      {/* Content Section - Flex Grow */}
+      <div className="p-6 flex flex-col flex-grow">
+        {/* Header */}
         <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className="text-display text-xl text-[#1A1A1D] mb-1">
+          <div className="flex-1">
+            <h3 className="text-display text-xl text-[#1A1A1D] mb-2">
               {product.name}
             </h3>
             <Badge className="bg-[#003049] text-[#F5F1E8] text-xs">
               {product.category}
             </Badge>
           </div>
-          <div className="flex items-center gap-1 text-mono text-xs text-[#1A1A1D]/60">
-            <Package className="w-4 h-4" />
-            <span>{product.stock}</span>
+          <div className="flex flex-col items-end gap-1 ml-2">
+            <div className="flex items-center gap-1 text-mono text-xs text-[#1A1A1D]/60">
+              <Package className="w-4 h-4" />
+            </div>
+            <span className="text-mono text-xs font-semibold text-[#06FFA5]">
+              In Stock: {product.stock}
+            </span>
           </div>
         </div>
 
-        <p className="text-mono text-sm text-[#1A1A1D]/70 mb-6">
+        <p className="text-mono text-sm text-[#1A1A1D]/70 mb-4 line-clamp-2">
           {product.description}
         </p>
 
         {/* Volume Tier Slider */}
-        <div className="space-y-4 mb-6 p-4 bg-white rounded-lg border border-[#003049]/10">
+        <div className="space-y-3 mb-4 p-4 bg-white rounded-lg border border-[#003049]/10">
           <div className="flex items-center justify-between">
             <span className="text-mono text-sm font-semibold text-[#1A1A1D]">
               Volume:
             </span>
             <div className="flex items-center gap-2">
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 value={quantity}
                 onChange={(e) => {
                   const val = parseInt(e.target.value) || 100;
@@ -113,32 +129,34 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </div>
         </div>
 
-        {/* Pricing */}
-        <div className="mb-4 p-4 bg-[#003049] rounded-lg">
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-mono text-sm text-[#F5F1E8]/70">
-              Price per {product.unit}:
-            </span>
-            <span className="text-display text-2xl text-[#06FFA5]">
-              €{currentPrice.toFixed(2)}
-            </span>
+        {/* Pricing - Pushed to bottom */}
+        <div className="mt-auto">
+          <div className="mb-4 p-4 bg-[#003049] rounded-lg">
+            <div className="flex items-baseline justify-between mb-2">
+              <span className="text-mono text-sm text-[#F5F1E8]/70">
+                Price per {product.unit}:
+              </span>
+              <span className="text-display text-2xl text-[#06FFA5]">
+                €{currentPrice.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between pt-2 border-t border-[#F5F1E8]/10">
+              <span className="text-mono text-sm font-semibold text-[#F5F1E8]">
+                Total:
+              </span>
+              <span className="text-display text-3xl text-[#F5F1E8]">
+                €{totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
           </div>
-          <div className="flex items-baseline justify-between pt-2 border-t border-[#F5F1E8]/10">
-            <span className="text-mono text-sm font-semibold text-[#F5F1E8]">
-              Total:
-            </span>
-            <span className="text-display text-3xl text-[#F5F1E8]">
-              €{totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-        </div>
 
-        <Button 
-          onClick={() => onAddToCart(product, quantity, selectedTier)}
-          className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] font-bold py-6 text-base transition-all hover:scale-[0.98]"
-        >
-          Add to Cart
-        </Button>
+          <Button
+            onClick={() => onAddToCart(product, quantity, selectedTier)}
+            className="w-full bg-[#06FFA5] hover:bg-[#06FFA5]/90 text-[#1A1A1D] font-bold py-6 text-base transition-all hover:scale-[0.98]"
+          >
+            Add to Cart
+          </Button>
+        </div>
       </div>
     </div>
   );
