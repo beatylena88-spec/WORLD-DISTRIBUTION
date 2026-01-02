@@ -18,7 +18,7 @@ PRODUCTS = [
     {
         "name": "Basmati Rice",
         "category": "Food Commodities",
-        "base_price": 12.0,
+        "base_price": 0.3,
         "unit": "kg",
         "stock": 15000,
         "description": "Premium long-grain basmati rice. Perfect for hotels and restaurant chains.",
