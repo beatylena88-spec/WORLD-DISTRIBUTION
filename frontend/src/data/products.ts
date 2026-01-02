@@ -15,7 +15,7 @@ export const products: Product[] = [
     id: '2',
     name: 'Basmati Rice',
     category: 'Food Commodities',
-    basePrice: 12,
+    basePrice: 0.4,
     unit: 'kg',
     image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&q=80',
     stock: 15000,
