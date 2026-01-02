@@ -1,7 +1,7 @@
 """
 Seed the database with demo products and test users
 """
-from database import init_database, execute_insert
+from database import init_database, execute_insert, execute_update
 from auth import hash_password
 
 # Demo products data
@@ -9,7 +9,7 @@ PRODUCTS = [
     {
         "name": "Premium Olive Oil",
         "category": "Food Commodities",
-        "base_price": 45.0,
+        "base_price": 0.95,
         "unit": "kg",
         "stock": 5000,
         "description": "Extra virgin olive oil from Mediterranean groves. Ideal for restaurants and food service.",
@@ -27,7 +27,7 @@ PRODUCTS = [
     {
         "name": "Industrial Coffee Beans",
         "category": "Food Commodities",
-        "base_price": 28.0,
+        "base_price": 0.8,
         "unit": "kg",
         "stock": 8000,
         "description": "Premium Arabica coffee beans sourced from sustainable farms worldwide.",
@@ -36,7 +36,7 @@ PRODUCTS = [
     {
         "name": "Disposable Gloves",
         "category": "Durable Consumables",
-        "base_price": 18.0,
+        "base_price": 0.5,
         "unit": "box",
         "stock": 20000,
         "description": "Nitrile gloves for food service and hospitality industry. FDA approved.",
@@ -45,7 +45,7 @@ PRODUCTS = [
     {
         "name": "Cleaning Supplies Kit",
         "category": "Durable Consumables",
-        "base_price": 35.0,
+        "base_price": 0.85,
         "unit": "kit",
         "stock": 3000,
         "description": "Commercial-grade cleaning supplies for hospitality and food service operations.",
@@ -54,7 +54,7 @@ PRODUCTS = [
     {
         "name": "Organic Pasta",
         "category": "Food Commodities",
-        "base_price": 8.0,
+        "base_price": 0.45,
         "unit": "kg",
         "stock": 12000,
         "description": "Italian organic durum wheat pasta. Bulk quantities for restaurant supply.",
@@ -63,7 +63,7 @@ PRODUCTS = [
     {
         "name": "Paper Towels",
         "category": "Durable Consumables",
-        "base_price": 22.0,
+        "base_price": 0.6,
         "unit": "case",
         "stock": 8500,
         "description": "Industrial paper towels for commercial kitchens and hospitality.",
@@ -72,7 +72,7 @@ PRODUCTS = [
     {
         "name": "Sea Salt",
         "category": "Food Commodities",
-        "base_price": 15.0,
+        "base_price": 0.35,
         "unit": "kg",
         "stock": 6000,
         "description": "Natural sea salt from Atlantic coast. Food-grade for culinary use.",
@@ -103,6 +103,10 @@ def seed_database():
     """Seed the database with demo data"""
     print("🌱 Seeding database...")
     
+    # Clear existing data
+    execute_update("DELETE FROM products")
+    print("🧹 Cleared existing products")
+
     # Seed products
     for product in PRODUCTS:
         execute_insert(
