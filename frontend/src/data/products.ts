@@ -25,7 +25,7 @@ export const products: Product[] = [
     id: '3',
     name: 'Industrial Coffee Beans',
     category: 'Food Commodities',
-    basePrice: 28,
+    basePrice: 0.8,
     unit: 'kg',
     image: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80',
     stock: 8000,
